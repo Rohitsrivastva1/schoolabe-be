@@ -1,10 +1,29 @@
 const Course = require("../models/Course");
 
-// Create a Course
+// Function to generate URL-friendly slugs
+const slugify = (text) => {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-") // Replace spaces with dashes
+    .replace(/[^\w\-]+/g, "") // Remove special characters
+    .replace(/\-\-+/g, "-"); // Replace multiple dashes with single one
+};
+
+// Create a Course with Slug
 const createCourse = async (req, res) => {
   try {
     const { title, description } = req.body;
-    const course = await Course.create({ title, description });
+    const slug = slugify(title);
+
+    // Check if a course with the same slug exists
+    const existingCourse = await Course.findOne({ where: { slug } });
+    if (existingCourse) {
+      return res.status(400).json({ success: false, message: "Course with this title already exists!" });
+    }
+
+    const course = await Course.create({ title, slug, description });
     res.status(201).json({ success: true, course });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -21,34 +40,52 @@ const getCourses = async (req, res) => {
   }
 };
 
-// Get Single Course by ID
-const getCourseById = async (req, res) => {
+// Get Single Course by Slug
+const getCourseBySlug = async (req, res) => {
   try {
-    const course = await Course.findByPk(req.params.id);
+    const course = await Course.findOne({ where: { slug: req.params.slug } });
     if (!course) return res.status(404).json({ success: false, message: "Course not found" });
+
     res.status(200).json({ success: true, course });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// Update Course
+// Update Course by Slug
 const updateCourse = async (req, res) => {
   try {
-    const course = await Course.findByPk(req.params.id);
+    const { title, description } = req.body;
+    const course = await Course.findOne({ where: { slug: req.params.slug } });
+
     if (!course) return res.status(404).json({ success: false, message: "Course not found" });
 
-    await course.update(req.body);
+    // Update slug if title is changed
+    if (title && title !== course.title) {
+      const newSlug = slugify(title);
+      const existingCourse = await Course.findOne({ where: { slug: newSlug } });
+
+      if (existingCourse && existingCourse.id !== course.id) {
+        return res.status(400).json({ success: false, message: "Another course with this title already exists!" });
+      }
+
+      course.slug = newSlug;
+    }
+
+    // Update other fields
+    if (description) course.description = description;
+
+    await course.save();
     res.status(200).json({ success: true, course });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// Delete Course
+// Delete Course by Slug
 const deleteCourse = async (req, res) => {
   try {
-    const course = await Course.findByPk(req.params.id);
+    const course = await Course.findOne({ where: { slug: req.params.slug } });
     if (!course) return res.status(404).json({ success: false, message: "Course not found" });
 
     await course.destroy();
@@ -58,4 +95,4 @@ const deleteCourse = async (req, res) => {
   }
 };
 
-module.exports = { createCourse, getCourses, getCourseById, updateCourse, deleteCourse };
+module.exports = { createCourse, getCourses, getCourseBySlug, updateCourse, deleteCourse };

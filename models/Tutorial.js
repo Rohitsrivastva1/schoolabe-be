@@ -7,8 +7,13 @@ const Tutorial = sequelize.define("Tutorial", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  slug: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
   content: {
-    type: DataTypes.JSONB, // Store JSON objects as an array
+    type: DataTypes.JSONB,
     allowNull: false,
   },
   courseId: {
@@ -22,7 +27,6 @@ const Tutorial = sequelize.define("Tutorial", {
   },
 });
 
-// Relationship: A Course has many Tutorials
 Course.hasMany(Tutorial, { foreignKey: "courseId", onDelete: "CASCADE" });
 Tutorial.belongsTo(Course, { foreignKey: "courseId" });
 

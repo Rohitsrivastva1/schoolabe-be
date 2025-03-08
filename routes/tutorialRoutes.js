@@ -1,8 +1,8 @@
 const express = require("express");
 const {
   createTutorial,
-  getTutorialsByCourse,
-  getTutorialById,
+  getTutorialsByCourseSlug,
+  getTutorialBySlug,
   updateTutorial,
   deleteTutorial,
 } = require("../controllers/tutorialController");
@@ -10,9 +10,9 @@ const {
 const router = express.Router();
 
 router.post("/", createTutorial);
-router.get("/:courseId", getTutorialsByCourse);
-router.get("/tutorial/:id", getTutorialById);
-router.put("/:id", updateTutorial);
-router.delete("/:id", deleteTutorial);
+router.get("/:courseSlug", getTutorialsByCourseSlug);
+router.get("/:courseSlug/:tutorialSlug", getTutorialBySlug);
+router.put("/:courseSlug/:tutorialSlug", updateTutorial);
+router.delete("/:courseSlug/:tutorialSlug", deleteTutorial);
 
 module.exports = router;
