@@ -6,13 +6,14 @@ const {
   updateTutorial,
   deleteTutorial,
 } = require("../controllers/tutorialController");
+const { adminAuth } = require("../middlewares/authMiddleware"); // ✅ FIXED: Import adminAuth
 
 const router = express.Router();
 
-router.post("/", createTutorial);
-router.get("/:courseSlug", getTutorialsByCourseSlug);
-router.get("/:courseSlug/:tutorialSlug", getTutorialBySlug);
-router.put("/:courseSlug/:tutorialSlug", updateTutorial);
-router.delete("/:courseSlug/:tutorialSlug", deleteTutorial);
+router.post("/", adminAuth, createTutorial);
+router.get("/:courseId", getTutorialsByCourse);
+router.get("/tutorial/:id", getTutorialById);
+router.put("/:id", adminAuth, updateTutorial);
+router.delete("/:id",adminAuth, deleteTutorial);
 
 module.exports = router;

@@ -2,22 +2,18 @@ const express = require("express");
 const { connectDB, sequelize } = require("./config/connectdb");
 const courseRoutes = require("./routes/courseRoutes");
 const tutorialRoutes = require("./routes/tutorialRoutes");
-const cors = require("cors"); // Import CORS
+const authRoutes = require("./routes/authRoutes");
+const cors = require("cors");
+const cookieParser = require("cookie-parser");
 
 const app = express();
 
-// ✅ CORS Configuration (More Secure)
-app.use(cors({ 
-  origin: "*", 
-  methods: ["GET", "POST", "PUT", "DELETE"], 
-  allowedHeaders: ["Content-Type", "Authorization"] 
-}));
+app.use(express.json());
+app.use(cookieParser()); // Enable reading cookies
+// app.use(cors({ origin: "*", methods: ["GET", "POST", "PUT", "DELETE"] }));
+app.use(cors({ credentials: true, origin: "http://localhost:3000" })); // Allow frontend requests with cookies
 
-// ✅ Middleware
-app.use(express.json()); // Parse JSON request body
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded data
-
-// ✅ API Routes
+app.use("/auth", authRoutes);
 app.use("/courses", courseRoutes);
 app.use("/tutorials", tutorialRoutes);
 
