@@ -6,8 +6,10 @@ const { adminAuth } = require("../middlewares/authMiddleware"); // ✅ FIXED: Im
 
 router.post("/",adminAuth, createCourse);
 router.get("/",  getCourses);
-router.get("/:id", getCourseById);
-router.put("/:id", adminAuth,updateCourse);
-router.delete("/:id", adminAuth,deleteCourse);
+router.get("/:slug", getCourseBySlug);
+router.put("/:slug", adminAuth,updateCourse);
+router.delete("/:slug", adminAuth, deleteCourse);
 
 module.exports = router;
+
+
