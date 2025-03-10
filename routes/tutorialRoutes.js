@@ -11,9 +11,10 @@ const { adminAuth } = require("../middlewares/authMiddleware"); // ✅ FIXED: Im
 const router = express.Router();
 
 router.post("/", adminAuth, createTutorial);
-router.get("/:courseId", getTutorialsByCourse);
-router.get("/tutorial/:id", getTutorialById);
-router.put("/:id", adminAuth, updateTutorial);
-router.delete("/:id",adminAuth, deleteTutorial);
+router.get("/:courseSlug", getTutorialsByCourseSlug);
+router.get("/courseSlug/:tutorialSlug", getTutorialBySlug);
+router.put("/:courseSlug/:tutorialSlug",adminAuth, updateTutorial);
+router.delete("/:courseSlug/:tutorialSlug",adminAuth, deleteTutorial);
 
 module.exports = router;
+
