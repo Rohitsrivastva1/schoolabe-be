@@ -23,6 +23,8 @@ const registerUser = async (req, res) => {
       });
   
       // Send OTP Email
+      console.log(otp);
+      
       await sendEmail(email, "Your OTP Code", `Your OTP is: ${otp}`);
   
       res.status(201).json({ success: true, message: "OTP sent to email" });
@@ -45,9 +47,10 @@ const loginUser = async (req, res) => {
       const otp = generateOTP();
       const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
       await user.update({ otp, otpExpiresAt });
-  
+      console.log(otp);
+      
       // Send OTP Email
-      await sendEmail(email, "Your OTP Code", `Your OTP is: ${otp}`);
+      // await sendEmail(email, "Your OTP Code", `Your OTP is: ${otp}`);
   
       res.status(200).json({ success: true, message: "OTP sent to email" });
     } catch (error) {
@@ -118,4 +121,43 @@ const me = async (req, res) => {
 };
 
 
-module.exports = { registerUser, loginUser, verifyOTP,me };
+const logoutUser = async (req, res) => {
+  try {
+    res.cookie("token", "", { httpOnly: true, expires: new Date(0) }); // Clear cookie
+    res.status(200).json({ success: true, message: "Logout successful" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Logout failed" });
+  }
+};
+
+
+const changePassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    // Find user
+    const user = await User.findOne({ where: { email } });
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    // Validate OTP
+    if (user.otp !== otp || new Date() > new Date(user.otpExpiresAt)) {
+      return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password and clear OTP
+    await user.update({ password: hashedPassword, otp: null, otpExpiresAt: null });
+
+    res.status(200).json({ success: true, message: "Password changed successfully" });
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
+
+module.exports = { registerUser, loginUser, verifyOTP,me,logoutUser,changePassword };
