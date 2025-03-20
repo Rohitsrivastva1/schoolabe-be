@@ -10,6 +10,8 @@ router.get("/:slug", getCourseBySlug);
 router.put("/:slug", adminAuth,updateCourse);
 router.delete("/:slug", adminAuth, deleteCourse);
 
+
+  
 module.exports = router;
 
 
