@@ -11,16 +11,17 @@ const sendEmail = require("../utils/mailer"); // Import mailer
 const registerUser = async (req, res) => {
     try {
       const { name, email, password, company } = req.body;
-      let user = await User.findOne({ where: { email } });
-      if (user) return res.status(400).json({ success: false, message: "User already exists" });
-  
+      // let user = await User.findOne({ where: { email } });
+      // if (user) return res.status(400).json({ success: false, message: "User already exists" });
+      console.log("👀 Existing user:", existingUser);
+
       const hashedPassword = await bcrypt.hash(password, 10);
       const otp = generateOTP();
       const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // OTP valid for 10 mins
   
-      user = await User.create({
-        name, email, password: hashedPassword, company, otp, otpExpiresAt,
-      });
+      // user = await User.create({
+      //   name, email, password: hashedPassword, company, otp, otpExpiresAt,
+      // });
   
       // Send OTP Email
       console.log(otp);
