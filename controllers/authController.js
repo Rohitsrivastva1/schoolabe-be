@@ -87,7 +87,7 @@ const verifyOTP = async (req, res) => {
     // **Set Token in HTTP-Only Cookie**
     res.cookie("token", token, {
       httpOnly: true,       // JavaScript cannot access this cookie
-      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+      secure: true, // Use secure cookies in production
       sameSite: "None",    // Prevent CSRF attacks
       maxAge: 3600000,       // 1 hour expiry
     });
