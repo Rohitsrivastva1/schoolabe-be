@@ -11,7 +11,7 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser()); // Enable reading cookies
 // app.use(cors({ origin: "*", methods: ["GET", "POST", "PUT", "DELETE"] }));
-app.use(cors({ credentials: true, origin: [ "http://localhost:3000", "https://www.schoolabe.com","https://schoolabe.com"]})); // Allow frontend requests with cookies
+app.use(cors({ credentials: true,  methods: ["GET", "POST", "PUT", "DELETE"], allowedHeaders: ["Content-Type", "Authorization"], origin: [ "http://localhost:3000", "https://www.schoolabe.com","https://schoolabe.com"]})); // Allow frontend requests with cookies
 
 app.use("/auth", authRoutes);
 app.use("/courses", courseRoutes);

@@ -25,7 +25,7 @@ const registerUser = async (req, res) => {
   
       // Send OTP Email
       console.log(otp);
-      
+        
       await sendEmail(email, "Your OTP Code", `Your OTP is: ${otp}`);
   
       res.status(201).json({ success: true, message: "OTP sent to email" });
@@ -88,7 +88,7 @@ const verifyOTP = async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true,       // JavaScript cannot access this cookie
       secure: process.env.NODE_ENV === "production", // Use secure cookies in production
-      sameSite: "Strict",    // Prevent CSRF attacks
+      sameSite: "None",    // Prevent CSRF attacks
       maxAge: 3600000,       // 1 hour expiry
     });
 
