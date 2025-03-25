@@ -5,6 +5,7 @@ const tutorialRoutes = require("./routes/tutorialRoutes");
 const authRoutes = require("./routes/authRoutes");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const quizRoutes = require("./routes/quizRoutes");
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(cors({ credentials: true,  methods: ["GET", "POST", "PUT", "DELETE"], al
 app.use("/auth", authRoutes);
 app.use("/courses", courseRoutes);
 app.use("/tutorials", tutorialRoutes);
+app.use("/api", quizRoutes);
 
 // ✅ Root Route (For Basic API Health Check)
 app.get("/", (req, res) => {
