@@ -35,18 +35,43 @@ const createTutorial = async (req, res) => {
     }
 
     // Assign unique IDs if not provided
-    const formattedContent = content.map((item) => ({
-      id: item.id || uuidv4(),
-      type: item.type,
+   // Assign unique IDs if not provided
+const formattedContent = content.map((item) => {
+  let formattedItem = {
+    id: item.id || uuidv4(),
+    type: item.type,
+  };
+
+  if (item.type === "table") {
+    formattedItem = {
+      ...formattedItem,
+      rows: item.rows,
+      cols: item.cols,
+      headerRow: item.headerRow,
+      data: item.data,
+    };
+  } else if (item.type === "image") {
+    formattedItem = {
+      ...formattedItem,
+      src: item.src || "",
+      alt: item.alt || "",
+    };
+  } else if (item.type === "youtube") {
+    formattedItem = {
+      ...formattedItem,
+      url: item.url || "",
+    };
+  } else {
+    // Default for text-based blocks (h1, h2, h3, p, code, list, etc.)
+    formattedItem = {
+      ...formattedItem,
       text: item.text || "",
-      ...(item.type === "table" && {
-        rows: item.rows,
-        cols: item.cols,
-        headerRow: item.headerRow,
-        data: item.data,
-      }),
-    
-    }));
+    };
+  }
+
+  return formattedItem;
+});
+
 
     // Generate unique slug
     let slug = slugify(title);
