@@ -38,7 +38,14 @@ const createTutorial = async (req, res) => {
     const formattedContent = content.map((item) => ({
       id: item.id || uuidv4(),
       type: item.type,
-      text: item.text,
+      text: item.text || "",
+      ...(item.type === "table" && {
+        rows: item.rows,
+        cols: item.cols,
+        headerRow: item.headerRow,
+        data: item.data,
+      }),
+    
     }));
 
     // Generate unique slug
