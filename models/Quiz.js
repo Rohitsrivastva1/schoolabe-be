@@ -2,29 +2,29 @@ const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/connectdb");
 
 const Quiz = sequelize.define("Quiz", {
-  id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
   title: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true,
-  },
-  slug: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true,
   },
   description: {
     type: DataTypes.TEXT,
-    allowNull: true,
-  },
-  category: {
-    type: DataTypes.STRING,
     allowNull: false,
   },
+  // Array of content blocks (paragraph, heading, list)
+  contentBlocks: {
+    type: DataTypes.JSON,
+    allowNull: false,
+    defaultValue: [],
+  },
+  // Quiz details page – multiple quiz parts
+  quizzes: {
+    type: DataTypes.JSON,
+    allowNull: false,
+    defaultValue: [],
+  },
+}, {
+  tableName: "quizzes",
+  timestamps: true,
 });
 
 module.exports = Quiz;

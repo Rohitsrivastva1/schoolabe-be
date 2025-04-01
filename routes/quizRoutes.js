@@ -1,31 +1,26 @@
 const express = require("express");
+const router = express.Router();
 const {
   createQuiz,
-  getQuizzes,
-  getQuizBySlug,
+  getAllQuizzes,
+  getQuizById,
   updateQuiz,
   deleteQuiz,
-  addQuestion,
-  updateQuestion,
-  deleteQuestion,
 } = require("../controllers/quizController");
 
-const  { createQuizPart, getQuizParts } =   require("../controllers/quizPartController");
-const router = express.Router();
-const { adminAuth } = require("../middlewares/authMiddleware");
+// Create a new quiz/course
+router.post("/", createQuiz);
 
-// ✅ Quiz Routes
-router.post("/quizzes", createQuiz);
-router.get("/quizzes", getQuizzes);
-router.get("/quizzes/:slug", getQuizBySlug);
-router.put("/quizzes/:slug", updateQuiz);  // ✅ Added missing update route
-router.delete("/quizzes/:slug", deleteQuiz);
+// Get all quizzes/courses
+router.get("/", getAllQuizzes);
 
-// ✅ Question Routes
-router.post("/quizzes/:slug/questions", addQuestion);
-router.put("/quizzes/:slug/questions/:questionId", updateQuestion);  // ✅ Added update question route
-router.delete("/quizzes/:slug/questions/:questionId", deleteQuestion);  // ✅ Added delete question route
-router.post("/quizzes/:slug/parts", createQuizPart);
-router.get("/quizzes/:slug/parts", getQuizParts);
+// Get a single quiz/course by ID
+router.get("/:id", getQuizById);
+
+// Update a quiz/course by ID
+router.put("/:id", updateQuiz);
+
+// Delete a quiz/course by ID
+router.delete("/:id", deleteQuiz);
 
 module.exports = router;

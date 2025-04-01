@@ -17,7 +17,7 @@ app.use(cors({ credentials: true,  methods: ["GET", "POST", "PUT", "DELETE"], al
 app.use("/auth", authRoutes);
 app.use("/courses", courseRoutes);
 app.use("/tutorials", tutorialRoutes);
-app.use("/api", quizRoutes);
+app.use("/api/quizzes", quizRoutes);
 
 // ✅ Root Route (For Basic API Health Check)
 app.get("/", (req, res) => {

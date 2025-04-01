@@ -1,5 +1,5 @@
 const QuizPart = require("../models/QuizPart");
-const Quiz = require("../models/Quiz");
+// const Quiz = require("../models/Quiz");
 
 // ✅ Create a Quiz Part
 const createQuizPart = async (req, res) => {
