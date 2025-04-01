@@ -1,4 +1,4 @@
-const Quiz = require("../models/quiz");
+const Quiz = require("../models/Quiz");
 
 // Create a new quiz/course
 const createQuiz = async (req, res) => {
