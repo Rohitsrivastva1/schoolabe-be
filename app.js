@@ -6,6 +6,13 @@ const authRoutes = require("./routes/authRoutes");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const quizRoutes = require("./routes/quizRoutes");
+const dsaCategoryRoutes = require("./routes/DSA/dsaCategoryRoutes");
+const dsaQuestionRoutes = require("./routes/DSA/dsaQuestionRoutes");
+
+const dsaTestCaseRoutes = require("./routes/DSA/dsaTestCaseRoutes");
+
+const dsaSubmissionRoutes = require("./routes/DSA/dsaSubmissionRoutes");
+
 
 const app = express();
 
@@ -18,6 +25,11 @@ app.use("/auth", authRoutes);
 app.use("/courses", courseRoutes);
 app.use("/tutorials", tutorialRoutes);
 app.use("/api/quizzes", quizRoutes);
+app.use("/api/dsa/categories", dsaCategoryRoutes);
+app.use("/api/dsa/questions", dsaQuestionRoutes);
+app.use("/api/dsa/testcases", dsaTestCaseRoutes);
+app.use("/api/dsa/submissions", dsaSubmissionRoutes);
+
 
 // ✅ Root Route (For Basic API Health Check)
 app.get("/", (req, res) => {
