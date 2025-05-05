@@ -17,73 +17,83 @@ const slugify = (text) => {
 const createTutorial = async (req, res) => {
   try {
     let { title, content, courseSlug } = req.body;
-
+    // console.log("Payload:", {
+    //   title,
+    //   content,
+    //   courseSlug
+    // });
     // Get course by slug
     const course = await Course.findOne({ where: { slug: courseSlug } });
+    console.log(course);
+    
     if (!course) {
       return res.status(404).json({ success: false, message: "Course not found" });
     }
 
     // Convert content to JSON if it's a string
-    if (typeof content === "string") {
-      content = JSON.parse(content);
-    }
+    // if (typeof content === "string") {
+    //   content = JSON.parse(content);
+    // }
 
     // Validate content format
-    if (!Array.isArray(content)) {
-      return res.status(400).json({ success: false, message: "Content must be an array of objects" });
-    }
+    // if (!Array.isArray(content)) {
+    //   return res.status(400).json({ success: false, message: "Content must be an array of objects" });
+    // }
 
+    console.log("sssssssss");
+    
     // Assign unique IDs if not provided
    // Assign unique IDs if not provided
-const formattedContent = content.map((item) => {
-  let formattedItem = {
-    id: item.id || uuidv4(),
-    type: item.type,
-  };
+  // if (item.type === "table") {
+  //   formattedItem = {
+  //     ...formattedItem,
+  //     rows: item.rows,
+  //     cols: item.cols,
+  //     headerRow: item.headerRow,
+  //     data: item.data,
+  //   };
+  // } else if (item.type === "image") {
+  //   formattedItem = {
+  //     ...formattedItem,
+  //     src: item.src || "",
+  //     alt: item.alt || "",
+  //   };
+  // } else if (item.type === "youtube") {
+  //   formattedItem = {
+  //     ...formattedItem,
+  //     url: item.url || "",
+  //   };
+  // } else {
+  //   // Default for text-based blocks (h1, h2, h3, p, code, list, etc.)
+  //   formattedItem = {
+  //     ...formattedItem,
+  //     text: item.text || "",
+  //   };
+  // }
+// const formattedContent = content.map((item) => {
+//   let formattedItem = {
+//     id: item.id || uuidv4(),
+//     type: item.type,
+//   };
 
-  if (item.type === "table") {
-    formattedItem = {
-      ...formattedItem,
-      rows: item.rows,
-      cols: item.cols,
-      headerRow: item.headerRow,
-      data: item.data,
-    };
-  } else if (item.type === "image") {
-    formattedItem = {
-      ...formattedItem,
-      src: item.src || "",
-      alt: item.alt || "",
-    };
-  } else if (item.type === "youtube") {
-    formattedItem = {
-      ...formattedItem,
-      url: item.url || "",
-    };
-  } else {
-    // Default for text-based blocks (h1, h2, h3, p, code, list, etc.)
-    formattedItem = {
-      ...formattedItem,
-      text: item.text || "",
-    };
-  }
 
-  return formattedItem;
-});
+//   return formattedItem;
+// });
 
 
     // Generate unique slug
     let slug = slugify(title);
     let existingTutorial = await Tutorial.findOne({ where: { slug, courseId: course.id } });
-
+    console.log("sssoueoieuio",slug,existingTutorial);
+    
     if (existingTutorial) {
       return res.status(400).json({ success: false, message: "Tutorial with this title already exists!" });
     }
 
     // Save tutorial to database
-    const tutorial = await Tutorial.create({ title, slug, content: formattedContent, courseId: course.id });
-
+    const tutorial = await Tutorial.create({ title, slug, content: content, courseId: course.id });
+    console.log(tutorial);
+    
     res.status(201).json({ success: true, tutorial });
   } catch (error) {
     console.error(error);

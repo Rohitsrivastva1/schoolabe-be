@@ -1,62 +1,46 @@
-const DsaSubmission = require("../../models/DSA/DsaSubmission");
-const DsaQuestion = require("../../models/DSA/DsaQuestion");
+const { runCodeWithInput } = require("../../services/judge0Service");
+const { DsaTestCase } = require("../../models/DSA/DsaTestCase");
 
-// ✅ POST /api/dsa/submissions/submit
-exports.submitSolution = async (req, res) => {
+const runSubmission = async (req, res) => {
+  const { code, language, testCases, customTestCase } = req.body;
+
+  console.log("Code:", code);
   try {
-    const { code, language, output, questionId } = req.body;
+    const results = [];
 
-    if (!questionId) {
-      return res.status(400).json({ success: false, message: "questionId is required" });
+    const allTestCases = testCases.length
+      ? testCases
+      : customTestCase
+      ? [{ input: customTestCase, expectedOutput: null }]
+      : [];
+
+    for (const testCase of allTestCases) {
+      const result = await runCodeWithInput(code, language, testCase.input);
+
+      results.push({
+        input: testCase.input,
+        output: result.stdout,
+        expected: testCase.expectedOutput,
+        status: result.status.description,
+        success: testCase.expectedOutput
+          ? result.stdout?.trim() === testCase.expectedOutput.trim()
+          : true,
+      });
     }
 
-    const submission = await DsaSubmission.create({
-      code,
-      language,
-      output,
-      userId: req.user.id, // from requireAuth middleware
-      DsaQuestionId: questionId,
-    });
+    const overallSuccess = results.every((r) => r.success);
+    const finalOutput = results.map((r) => {
+      return `Input:\n${r.input}\nExpected:\n${r.expected}\nGot:\n${r.output}\nStatus: ${r.status}\nSuccess: ${r.success}\n`;
+    }).join("\n");
 
-    res.status(201).json({ success: true, submission });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.json({
+      output: finalOutput,
+      success: overallSuccess,
+    });
+  } catch (err) {
+    console.error("Run error:", err.message);
+    res.status(500).json({ error: "Error running code" });
   }
 };
 
-// ✅ GET /api/dsa/submissions/user/:userId
-exports.getUserSubmissions = async (req, res) => {
-  try {
-    const userId = req.params.userId;
-
-    if (parseInt(userId) !== req.user.id) {
-      return res.status(403).json({ success: false, message: "Unauthorized access" });
-    }
-
-    const submissions = await DsaSubmission.findAll({
-      where: { userId },
-      include: { model: DsaQuestion, attributes: ["title"] },
-      order: [["createdAt", "DESC"]],
-    });
-
-    res.status(200).json({ success: true, submissions });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// ✅ (Optional) GET /api/dsa/submissions/question/:questionId
-exports.getSubmissionsByQuestion = async (req, res) => {
-  try {
-    const { questionId } = req.params;
-
-    const submissions = await DsaSubmission.findAll({
-      where: { DsaQuestionId: questionId },
-      order: [["createdAt", "DESC"]],
-    });
-
-    res.status(200).json({ success: true, submissions });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
+module.exports = { runSubmission };
