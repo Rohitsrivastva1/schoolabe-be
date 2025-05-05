@@ -76,7 +76,7 @@ const loginUser = async (req, res) => {
     const name = user.name;
 
     // Generate email content using the template
-    const emailContent = getOTPEmailTemplate(name, otp);
+    const emailContent = getLoginOTPEmailTemplate(name, otp);
 
     // Send OTP email
     await sendEmail(email, "Your OTP Code", emailContent);
