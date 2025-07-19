@@ -10,12 +10,12 @@ const sequelize = new Sequelize(
     dialect: process.env.DB_DIALECT,
     port: process.env.DB_PORT,
     logging: false, // Disable logging queries in the console
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false,
-    },
-  },
+  //   dialectOptions: {
+  //     ssl: {
+  //       require: true,
+  //       rejectUnauthorized: false,
+  //   },
+  // },
 }
 );
 
