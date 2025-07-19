@@ -19,27 +19,33 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser()); // Enable reading cookies
 // app.use(cors({ origin: "*", methods: ["GET", "POST", "PUT", "DELETE"] }));
-app.use(cors({ 
-  credentials: true,  
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Added OPTIONS
-  allowedHeaders: [
-    "Content-Type", 
-    "Authorization", 
-    "X-Requested-With",  // Added
-    "Accept",            // Added
-    "Origin"             // Added
-  ], 
-  exposedHeaders: ["Set-Cookie"], // Added
-  origin: [ 
-    "http://10.0.2.2:5000/", 
-    "http://localhost:8081",
-    "http://localhost:3000", 
-    "http://localhost:19006",     // Added Expo dev server
-    "exp://localhost:19000",      // Added Expo Go
-    "https://www.schoolabe.com",
-    "https://schoolabe.com"
-  ]
+// app.use(cors({ 
+//   credentials: true,  
+//   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Added OPTIONS
+//   allowedHeaders: [
+//     "Content-Type", 
+//     "Authorization", 
+//     "X-Requested-With",  // Added
+//     "Accept",            // Added
+//     "Origin"             // Added
+//   ], 
+//   exposedHeaders: ["Set-Cookie"], // Added
+//   origin: [ 
+//     "http://10.0.2.2:5000/", 
+//     "http://localhost:8081",
+//     "http://localhost:3000", 
+//     "http://localhost:19006",     // Added Expo dev server
+//     "exp://localhost:19000",      // Added Expo Go
+//     "https://www.schoolabe.com",
+//     "https://schoolabe.com"
+//   ]
+// }));
+
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 }));
+
 app.use("/auth", authRoutes);
 app.use("/courses", courseRoutes);
 app.use("/tutorials", tutorialRoutes);
