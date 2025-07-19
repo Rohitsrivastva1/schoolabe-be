@@ -45,6 +45,7 @@ const registerUser = async (req, res) => {
     // Respond to the request
     res.status(201).json({ success: true, message: "OTP sent to email" });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -108,7 +109,7 @@ const verifyOTP = async (req, res) => {
     const token = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "30d" }
     );
 
     // Clear OTP after successful login
@@ -119,7 +120,7 @@ const verifyOTP = async (req, res) => {
       httpOnly: true,       // JavaScript cannot access this cookie
       secure: true, // Use secure cookies in production
       sameSite: "None",    // Prevent CSRF attacks
-      maxAge: 3600000,       // 1 hour expiry
+      maxAge: 30 * 24 * 60 * 60 * 1000,       // 30 days expiry
     });
 
     res.status(200).json({ success: true, role: user.role, message: "Login successful" });

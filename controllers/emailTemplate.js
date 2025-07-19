@@ -36,5 +36,5 @@ const getOTPEmailTemplate = (name, otp) => {
   };
   
 
-  module.exports = { getOTPEmailTemplate };
+  module.exports = { getOTPEmailTemplate, getLoginOTPEmailTemplate };
   
