@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 require("dotenv").config();
 const { getOTPEmailTemplate } = require('./emailTemplate');
-
+const { getLoginOTPEmailTemplate } = require('./emailTemplate');
 // Helper function to generate OTP
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 const sendEmail = require("../utils/mailer"); // Import mailer
