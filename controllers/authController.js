@@ -38,9 +38,14 @@ const registerUser = async (req, res) => {
     // Generate email content using the template
     const emailContent = getOTPEmailTemplate(name, otp);
 
-    // Send OTP email
+    // Send OTP email (don't block if email fails)
     console.log(otp);
-    await sendEmail(email, "Your OTP Code", emailContent);
+    try {
+      await sendEmail(email, "Your OTP Code", emailContent);
+      console.log("📧 Registration OTP email sent successfully");
+    } catch (emailError) {
+      console.log("⚠️ Email sending failed, but registration continues:", emailError.message);
+    }
 
     // Respond to the request
     res.status(201).json({ success: true, message: "OTP sent to email" });
@@ -50,41 +55,76 @@ const registerUser = async (req, res) => {
   }
 };
 
-// Login User
+// Login User (Temporarily bypassing OTP)
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log('🔐 Login attempt:', { email });
     
     // Find the user by email
     const user = await User.findOne({ where: { email } });
 
     // If user not found, return an error
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    if (!user) {
+      console.log('❌ User not found:', email);
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
 
     // Compare the password with the stored hash
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ success: false, message: "Invalid credentials" });
+    if (!isMatch) {
+      console.log('❌ Invalid password for user:', email);
+      return res.status(400).json({ success: false, message: "Invalid credentials" });
+    }
 
-    // Generate OTP and set expiration time
-    const otp = generateOTP();
-    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    console.log('✅ Password verified for user:', email);
 
-    // Update the user with the generated OTP and its expiration time
-    await user.update({ otp, otpExpiresAt });
-    console.log(otp);
-    
-    // Get the user's name from the user object
-    const name = user.name;
+    // TEMPORARY: Skip OTP verification and directly issue JWT token
+    console.log('⚠️ OTP verification temporarily disabled');
 
-    // Generate email content using the template
-    const emailContent = getLoginOTPEmailTemplate(name, otp);
+    // Check if JWT_SECRET is configured
+    if (!process.env.JWT_SECRET) {
+      console.log('❌ JWT_SECRET not configured');
+      return res.status(500).json({ 
+        success: false, 
+        message: "Server configuration error" 
+      });
+    }
 
-    // Send OTP email
-    await sendEmail(email, "Your OTP Code", emailContent);
-    
-    // Respond with success
-    res.status(200).json({ success: true, message: "OTP sent to email" });
+    // Generate JWT Token directly
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "30d" }
+    );
+
+    console.log('🎫 JWT Token generated successfully for user:', email);
+
+    // Set Token in HTTP-Only Cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false, // Set to false for localhost development
+      sameSite: "Lax",
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days expiry
+    });
+
+    console.log('🍪 Cookie set successfully');
+
+    // Respond with success and user data
+    res.status(200).json({ 
+      success: true, 
+      role: user.role, 
+      message: "Login successful (OTP bypassed)",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+
   } catch (error) {
+    console.error('❌ Login error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -95,14 +135,48 @@ const loginUser = async (req, res) => {
 const verifyOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
+    console.log('🔍 OTP Verification attempt:', { email, otp });
 
     // Find user
     const user = await User.findOne({ where: { email } });
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    if (!user) {
+      console.log('❌ User not found:', email);
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    console.log('👤 User found:', user.email);
+    console.log('📱 Stored OTP:', user.otp);
+    console.log('⏰ OTP Expires:', user.otpExpiresAt);
+    console.log('🔄 Current time:', new Date());
 
     // Validate OTP
-    if (user.otp !== otp || new Date() > new Date(user.otpExpiresAt)) {
-      return res.status(400).json({ success: false, message: "Invalid or expired OTP" });
+    const isOtpValid = user.otp === otp;
+    const isOtpExpired = new Date() > new Date(user.otpExpiresAt);
+    
+    console.log('✅ OTP Match:', isOtpValid);
+    console.log('⏰ OTP Expired:', isOtpExpired);
+
+    if (!isOtpValid || isOtpExpired) {
+      console.log('❌ OTP validation failed');
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid or expired OTP",
+        debug: {
+          otpMatch: isOtpValid,
+          otpExpired: isOtpExpired,
+          providedOtp: otp,
+          storedOtp: user.otp
+        }
+      });
+    }
+
+    // Check if JWT_SECRET is configured
+    if (!process.env.JWT_SECRET) {
+      console.log('❌ JWT_SECRET not configured');
+      return res.status(500).json({ 
+        success: false, 
+        message: "Server configuration error" 
+      });
     }
 
     // Generate JWT Token
@@ -112,20 +186,36 @@ const verifyOTP = async (req, res) => {
       { expiresIn: "30d" }
     );
 
+    console.log('🎫 JWT Token generated successfully');
+
     // Clear OTP after successful login
     await user.update({ otp: null, otpExpiresAt: null });
+    console.log('🧹 OTP cleared from database');
 
     // **Set Token in HTTP-Only Cookie**
     res.cookie("token", token, {
-      httpOnly: true,       // JavaScript cannot access this cookie
-      secure: true, // Use secure cookies in production
-      sameSite: "None",    // Prevent CSRF attacks
-      maxAge: 30 * 24 * 60 * 60 * 1000,       // 30 days expiry
+      httpOnly: true,
+      secure: false, // Set to false for localhost development
+      sameSite: "Lax", // Changed from "None" for better compatibility
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days expiry
     });
 
-    res.status(200).json({ success: true, role: user.role, message: "Login successful" });
+    console.log('🍪 Cookie set successfully');
+
+    res.status(200).json({ 
+      success: true, 
+      role: user.role, 
+      message: "Login successful",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
 
   } catch (error) {
+    console.error('❌ OTP verification error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -189,7 +279,115 @@ const changePassword = async (req, res) => {
   }
 };
 
+// Forgot Password - Send Reset OTP
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    console.log('🔑 Forgot password request for:', email);
+
+    // Find user by email
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      console.log('❌ User not found for forgot password:', email);
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Generate new OTP for password reset
+    const resetOtp = generateOTP();
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // OTP valid for 10 mins
+
+    // Update user with new OTP
+    await user.update({ otp: resetOtp, otpExpiresAt });
+
+    // Generate email content using the template
+    const emailContent = getOTPEmailTemplate(user.name, resetOtp);
+
+    // Send OTP email
+    try {
+      await sendEmail(email, "Password Reset OTP", emailContent);
+      console.log('📧 Password reset OTP email sent successfully');
+    } catch (emailError) {
+      console.log('⚠️ Email sending failed:', emailError.message);
+      return res.status(500).json({ success: false, message: "Failed to send reset email" });
+    }
+
+    res.status(200).json({ success: true, message: "Password reset OTP sent to your email" });
+  } catch (error) {
+    console.error('❌ Forgot password error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Verify Reset OTP
+const verifyResetOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    console.log('🔐 Verifying reset OTP for:', email);
+
+    // Find user by email
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Validate OTP
+    if (user.otp !== otp) {
+      return res.status(400).json({ success: false, message: "Invalid OTP" });
+    }
+
+    // Check if OTP is expired
+    if (new Date() > new Date(user.otpExpiresAt)) {
+      return res.status(400).json({ success: false, message: "OTP has expired" });
+    }
+
+    res.status(200).json({ success: true, message: "OTP verified successfully" });
+  } catch (error) {
+    console.error('❌ Verify reset OTP error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Reset Password
+const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    console.log('🔑 Resetting password for:', email);
+
+    // Find user by email
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Validate OTP
+    if (user.otp !== otp) {
+      return res.status(400).json({ success: false, message: "Invalid OTP" });
+    }
+
+    // Check if OTP is expired
+    if (new Date() > new Date(user.otpExpiresAt)) {
+      return res.status(400).json({ success: false, message: "OTP has expired" });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password and clear OTP
+    await user.update({ 
+      password: hashedPassword, 
+      otp: null, 
+      otpExpiresAt: null 
+    });
+
+    console.log('✅ Password reset successfully for:', email);
+    res.status(200).json({ success: true, message: "Password reset successfully" });
+  } catch (error) {
+    console.error('❌ Reset password error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 
 
-module.exports = { registerUser, loginUser, verifyOTP,me,logoutUser,changePassword };
+
+module.exports = { registerUser, loginUser, verifyOTP, me, logoutUser, changePassword, forgotPassword, verifyResetOtp, resetPassword };
